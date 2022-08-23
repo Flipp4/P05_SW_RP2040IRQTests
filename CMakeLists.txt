@@ -37,6 +37,10 @@ target_link_libraries(P05_SW_PicoIRQTest pico_stdlib)
 target_link_libraries( P05_SW_PicoIRQTest
         hardware_timer
         hardware_clocks
+        hardware_pwm
+        hardware_flash
+        hardware_irq
+        hardware_gpio
         )
 
 pico_add_extra_outputs(P05_SW_PicoIRQTest)
