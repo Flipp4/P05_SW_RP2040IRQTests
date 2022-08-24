@@ -11,8 +11,8 @@
 
 #define dXIPdisabled    ( 1 )
 
-#define dIRQSourceExclusive ( 0 )
-#define dIRQSourceCallback  ( 1 )
+#define dIRQSourceExclusive ( 1 )
+#define dIRQSourceCallback  ( 0 )
 #define dIRQSourceRaw       ( 0 )
 
 #define dGPIO_IRQ   ( 0 )
@@ -21,6 +21,7 @@
 #define dGPIO_PWM   ( 4 )
 
 void GPIO_IRQHandlerFunc( uint gpio, uint32_t events );
+void GPIO_ExclusiveIRQHandlerFunc();
 void GPIO_Initialize();
 void PWM_Initialize();
 
@@ -41,16 +42,6 @@ int main()
     }
 
     return 0;
-}
-
-// hal_gpio_irq_handler 
-
-//void __not_in_flash_func()
-// __attribute__((__section__(".scratch_x.GPIO_IRQHandlerFunc")))
-void GPIO_IRQHandlerFunc( uint gpio, uint32_t events )
-{
-    padsbank0_hw->io[dGPIO_OUT1] ^= PADS_BANK0_GPIO0_OD_BITS;
-    padsbank0_hw->io[dGPIO_OUT2] ^= PADS_BANK0_GPIO0_OD_BITS;
 }
 
 void GPIO_Initialize()
@@ -82,7 +73,9 @@ void GPIO_Initialize()
      
     #if dIRQSourceExclusive
     /* Option 1: exclusive handler*/
-    irq_set_exclusive_handler();
+    irq_set_exclusive_handler(IO_IRQ_BANK0, GPIO_ExclusiveIRQHandlerFunc);
+    gpio_set_irq_enabled(dGPIO_IRQ, 0x4, true);
+    irq_set_enabled(IO_IRQ_BANK0, true);
     #endif
 
     #if dIRQSourceCallback
@@ -116,4 +109,22 @@ void PWM_Initialize()
   pwm_set_chan_level(slice_num, chan, 100);
 // Set the PWM running
   pwm_set_enabled(slice_num, true);
+}
+
+// hal_gpio_irq_handler 
+
+//void __not_in_flash_func()
+// __attribute__((__section__(".scratch_x.GPIO_IRQHandlerFunc")))
+void GPIO_IRQHandlerFunc( uint gpio, uint32_t events )
+{
+    padsbank0_hw->io[dGPIO_OUT1] ^= PADS_BANK0_GPIO0_OD_BITS;
+    padsbank0_hw->io[dGPIO_OUT2] ^= PADS_BANK0_GPIO0_OD_BITS;
+}
+
+void GPIO_ExclusiveIRQHandlerFunc()
+{
+    padsbank0_hw->io[dGPIO_OUT1] ^= PADS_BANK0_GPIO0_OD_BITS;
+    padsbank0_hw->io[dGPIO_OUT2] ^= PADS_BANK0_GPIO0_OD_BITS;
+  /* Clear IRQ - if not this will be caled infinitely */
+  iobank0_hw->intr[dGPIO_IRQ / 8] = 0xF << 4 * (dGPIO_IRQ % 8);
 }
