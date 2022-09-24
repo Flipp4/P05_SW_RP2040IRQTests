@@ -13,6 +13,8 @@ set(PICO_SDK_PATH "C:/MicrocontrollerTools/Pico/pico-sdk")
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include("${PICO_SDK_PATH}/external/pico_sdk_import.cmake")
 
+include("$ENV{PICO_EXTRAS_PATH}/external/pico_extras_import.cmake")
+
 project(P05_SW_PicoIRQTest C CXX ASM)
 
 # Initialise the Raspberry Pi Pico SDK
@@ -42,6 +44,8 @@ target_link_libraries( P05_SW_PicoIRQTest
         hardware_flash
         hardware_irq
         hardware_gpio
+        hardware_sleep
+        hardware_rosc
         )
 
 pico_add_extra_outputs(P05_SW_PicoIRQTest)
